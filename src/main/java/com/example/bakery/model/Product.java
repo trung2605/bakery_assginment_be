@@ -9,7 +9,7 @@ import java.math.BigDecimal; // Cho DECIMAL
 // import jakarta.validation.constraints.Min; // Thêm nếu dùng validation cho stock_quantity
 
 @Entity
-@Table(name = "Products")
+@Table(name = "products")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

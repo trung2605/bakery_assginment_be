@@ -1,4 +1,4 @@
-package com.bakery.bakerybe.entity;
+package com.example.bakery.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -7,7 +7,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "Users") // Tên bảng trong database là Users
+@Table(name = "users") // Tên bảng trong database là Users
 @Getter
 @Setter
 @NoArgsConstructor
@@ -15,8 +15,9 @@ import java.time.LocalDateTime;
 @Builder
 public class User {
     @Id
-    @Column(name = "user_id", length = 7)
-    private String userId; // user_id CHAR(7) PRIMARY KEY CHECK (user_id LIKE 'CUS____')
+    @Column(name = "user_id", length = 7, nullable = false, unique = true)
+    // Bỏ @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private String userId;
 
     @Column(name = "first_name", length = 100)
     private String firstName; // first_name VARCHAR(100)
