@@ -33,9 +33,10 @@ public class SecurityConfig {
                         // PHẢI ĐẶT TRƯỚC anyRequest().authenticated()
                         .requestMatchers(
                                 "/api/auth/**",
-                                "api/branches/**",
-                                "api/products/**",
-                                "api/users/**"
+                                "/api/branches/**",
+                                "/api/products/**",
+                                "/api/users/**",
+                                "/api/chatbot/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 );

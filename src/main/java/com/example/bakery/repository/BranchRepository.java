@@ -13,5 +13,4 @@ public interface BranchRepository extends JpaRepository<Branch, Integer> {
     Optional<Branch> findByAddress(String address);
     List<Branch> findByHotline(String hotline);
     List<Branch> findByNameContainingIgnoreCase(String nameKeyword);
-    // ... các phương thức khác nếu có
 }
