@@ -39,7 +39,7 @@ public class User {
     private LocalDateTime createdAt; // created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 
     @Column(name = "role")
-    private Integer role; // role TINYINT DEFAULT 0 (sử dụng Integer cho TINYINT)
+    private Boolean role = false;
 
     @PrePersist // Hàm được gọi trước khi entity được lưu vào database lần đầu
     protected void onCreate() {

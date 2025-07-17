@@ -1,12 +1,15 @@
-// src/main/java/com/example/bakery/controller/AuthController.java
 package com.example.bakery.controller;
 
 import com.example.bakery.dto.LoginRequest;
 import com.example.bakery.dto.RegisterRequest;
-import com.example.bakery.dto.AuthResponse; // Nếu bạn dùng AuthResponse
-import com.example.bakery.model.User; // Import User Entity
+import com.example.bakery.dto.AuthResponse;
+import com.example.bakery.model.Cart;
+import com.example.bakery.model.User;
+import com.example.bakery.repository.CartRepository;
+import com.example.bakery.repository.UserRepository;
+import com.example.bakery.service.IdGeneratorService;
 import com.example.bakery.service.UserService;
-import jakarta.validation.Valid; // Để sử dụng @Valid cho validation DTO
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,53 +18,70 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/auth") // Base URL cho các API xác thực
+@RequestMapping("/api/auth")
 public class AuthController {
 
     private final UserService userService;
+    private final IdGeneratorService idGeneratorService;
+    private final CartRepository cartRepository;
+    private final UserRepository userRepository;
 
     @Autowired
-    public AuthController(UserService userService) {
+    public AuthController(UserService userService, IdGeneratorService idGeneratorService, CartRepository cartRepository, UserRepository userRepository) {
         this.userService = userService;
+        this.idGeneratorService = idGeneratorService;
+        this.cartRepository = cartRepository;
+        this.userRepository = userRepository;
     }
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
         try {
-            // Chuyển đổi RegisterRequest DTO sang User Entity
+            if (userService.existsByEmail(registerRequest.getEmail())) {
+                return ResponseEntity.badRequest().body(new AuthResponse(null, null, null, null, null, null, null, "Email đã được sử dụng."));
+            }
+
             User newUser = new User();
+            newUser.setUserId(idGeneratorService.generateUserId());
             newUser.setFirstName(registerRequest.getFirstName());
             newUser.setLastName(registerRequest.getLastName());
             newUser.setEmail(registerRequest.getEmail());
             newUser.setPhone(registerRequest.getPhone());
-            newUser.setPasswordHash(registerRequest.getPassword()); // Mật khẩu thô từ DTO
+            newUser.setPasswordHash(userService.hashPassword(registerRequest.getPassword()));
 
             User registeredUser = userService.registerUser(newUser);
 
-            // Xây dựng AuthResponse
+            String cartId;
+            Optional<Cart> existingCart = cartRepository.findByUser(registeredUser);
+            if (existingCart.isEmpty()) {
+                Cart cart = new Cart();
+                cart.setCartId(idGeneratorService.generateCartId());
+                cart.setUser(userRepository.findById(registeredUser.getUserId()).orElseThrow());
+                cartRepository.save(cart);
+                cartId = cart.getCartId();
+            } else {
+                cartId = existingCart.get().getCartId();
+            }
+
             AuthResponse response = new AuthResponse(
                     registeredUser.getUserId(),
                     registeredUser.getEmail(),
                     registeredUser.getFirstName(),
                     registeredUser.getLastName(),
-                    registeredUser.getRole() != null ? String.valueOf(registeredUser.getRole()) : "USER", // Chuyển đổi Integer sang String cho tiện
+                    registeredUser.getRole() != null && registeredUser.getRole() ? "ADMIN" : "USER",
+                    cartId,
                     "Đăng ký thành công!",
-                    null // JWT token sẽ được thêm vào đây nếu triển khai
+                    null
             );
 
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IllegalArgumentException e) {
-            // Trả về lỗi 400 Bad Request với thông báo lỗi cụ thể
-            return ResponseEntity.badRequest().body(new AuthResponse(null, null, null, null, null, e.getMessage(), null));
+            return ResponseEntity.badRequest().body(new AuthResponse(null, null, null, null, null, null, null, e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new AuthResponse(null, null, null, null, null, null, null, "Lỗi server: " + e.getMessage()));
         }
     }
 
-    /**
-     * Endpoint đăng nhập người dùng.
-     * POST /api/auth/login
-     * @param loginRequest DTO chứa thông tin đăng nhập từ client.
-     * @return ResponseEntity chứa thông tin người dùng và token (nếu có) hoặc lỗi.
-     */
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@Valid @RequestBody LoginRequest loginRequest) {
         try {
@@ -72,43 +92,30 @@ public class AuthController {
 
             if (authenticatedUser.isPresent()) {
                 User user = authenticatedUser.get();
-                // TODO: Tạo JWT Token ở đây nếu bạn triển khai xác thực JWT
-                String jwtToken = "mock_jwt_token_example_for_" + user.getUserId(); // Placeholder
+                String cartId = cartRepository.findByUser(user)
+                        .map(Cart::getCartId)
+                        .orElseThrow(() -> new IllegalStateException("Không tìm thấy giỏ hàng cho user: " + user.getUserId()));
 
                 AuthResponse response = new AuthResponse(
                         user.getUserId(),
                         user.getEmail(),
                         user.getFirstName(),
                         user.getLastName(),
-                        user.getRole() != null ? String.valueOf(user.getRole()) : "USER",
+                        user.getRole() != null && user.getRole() ? "ADMIN" : "USER",
+                        cartId,
                         "Đăng nhập thành công!",
-                        jwtToken
+                        null
                 );
                 return ResponseEntity.ok(response);
             } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new AuthResponse(null, null, null, null, null, "Email/User ID hoặc mật khẩu không chính xác.", null));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                        new AuthResponse(null, null, null, null, null, null, null, "Email/User ID hoặc mật khẩu không chính xác.")
+                );
             }
         } catch (Exception e) {
-            // Bắt các ngoại lệ chung (ví dụ: lỗi hệ thống)
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new AuthResponse(null, null, null, null, null, "Đã xảy ra lỗi server: " + e.getMessage(), null));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    new AuthResponse(null, null, null, null, null, null, null, "Lỗi server: " + e.getMessage())
+            );
         }
     }
-
-    // GHI CHÚ: Đối với các lỗi validation từ @Valid, Spring sẽ tự động
-    // trả về 400 Bad Request. Bạn có thể tùy chỉnh phản hồi này bằng
-    // @ControllerAdvice hoặc @ExceptionHandler.
-    // Ví dụ:
-    /*
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidationExceptions(
-        MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
-        return ResponseEntity.badRequest().body(errors);
-    }
-    */
 }

@@ -21,23 +21,12 @@ public class UserController {
         this.userService = userService;
     }
 
-    /**
-     * Lấy tất cả người dùng.
-     * GET /api/users
-     * @return ResponseEntity chứa danh sách người dùng và trạng thái HTTP OK.
-     */
     @GetMapping // Ánh xạ yêu cầu GET đến /api/users
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userService.getAllUsers();
         return ResponseEntity.ok(users); // Trả về 200 OK với danh sách người dùng
     }
 
-    /**
-     * Lấy thông tin người dùng theo ID.
-     * GET /api/users/{userId}
-     * @param userId ID của người dùng.
-     * @return ResponseEntity chứa User và trạng thái HTTP OK, hoặc NOT_FOUND nếu không tìm thấy.
-     */
     @GetMapping("/{userId}") // Ánh xạ yêu cầu GET đến /api/users/{userId}
     public ResponseEntity<User> getUserById(@PathVariable String userId) { // Lấy userId từ URL path
         Optional<User> user = userService.getUserById(userId);
@@ -45,12 +34,6 @@ public class UserController {
                 .orElseGet(() -> ResponseEntity.notFound().build()); // Nếu không, trả về 404 Not Found
     }
 
-    /**
-     * Tạo người dùng mới.
-     * POST /api/users
-     * @param user Đối tượng User được gửi trong request body.
-     * @return ResponseEntity chứa User đã tạo và trạng thái HTTP CREATED.
-     */
     @PostMapping // Ánh xạ yêu cầu POST đến /api/users
     public ResponseEntity<User> createUser(@RequestBody User user) { // Nhận đối tượng User từ request body
         try {
@@ -64,13 +47,6 @@ public class UserController {
         }
     }
 
-    /**
-     * Cập nhật thông tin người dùng.
-     * PUT /api/users/{userId}
-     * @param userId ID của người dùng cần cập nhật.
-     * @param userDetails Đối tượng User với thông tin cập nhật trong request body.
-     * @return ResponseEntity chứa User đã cập nhật và trạng thái HTTP OK, hoặc NOT_FOUND/BAD_REQUEST.
-     */
     @PutMapping("/{userId}") // Ánh xạ yêu cầu PUT đến /api/users/{userId}
     public ResponseEntity<User> updateUser(@PathVariable String userId, @RequestBody User userDetails) {
         Optional<User> existingUserOptional = userService.getUserById(userId);
@@ -95,12 +71,6 @@ public class UserController {
         }
     }
 
-    /**
-     * Xóa người dùng theo ID.
-     * DELETE /api/users/{userId}
-     * @param userId ID của người dùng cần xóa.
-     * @return ResponseEntity với trạng thái HTTP NO_CONTENT nếu thành công, hoặc NOT_FOUND.
-     */
     @DeleteMapping("/{userId}") // Ánh xạ yêu cầu DELETE đến /api/users/{userId}
     public ResponseEntity<HttpStatus> deleteUser(@PathVariable String userId) {
         try {
@@ -111,12 +81,6 @@ public class UserController {
         }
     }
 
-    /**
-     * Lấy người dùng theo email.
-     * GET /api/users/by-email?email={email}
-     * @param email Địa chỉ email của người dùng.
-     * @return ResponseEntity chứa User và trạng thái HTTP OK, hoặc NOT_FOUND.
-     */
     @GetMapping("/by-email") // Ví dụ sử dụng @RequestParam
     public ResponseEntity<User> getUserByEmail(@RequestParam String email) {
         Optional<User> user = userService.findUserByEmail(email);
@@ -124,12 +88,6 @@ public class UserController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    /**
-     * Lấy danh sách người dùng theo vai trò.
-     * GET /api/users/by-role?role={role}
-     * @param role Vai trò của người dùng.
-     * @return ResponseEntity chứa danh sách người dùng và trạng thái HTTP OK.
-     */
     @GetMapping("/by-role")
     public ResponseEntity<List<User>> getUsersByRole(@RequestParam Integer role) {
         List<User> users = userService.getUsersByRole(role);

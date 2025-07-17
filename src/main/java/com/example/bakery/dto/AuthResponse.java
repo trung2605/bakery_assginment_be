@@ -14,6 +14,7 @@ public class AuthResponse {
     private String firstName;
     private String lastName;
     private String role; // Hoặc Integer role
-    private String message; // Ví dụ: "Đăng nhập thành công"
-    private String jwtToken; // Optional: Nếu bạn triển khai JWT
+    private String cartId; // Optional: Nếu bạn triển khai JWT
+    private String successMessage; // Thêm trường này
+    private String errorMessage;   // Và trường này
 }
