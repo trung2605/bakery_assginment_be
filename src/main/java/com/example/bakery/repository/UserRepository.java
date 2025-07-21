@@ -15,7 +15,6 @@ public interface UserRepository extends JpaRepository<User, String> {
     List<User> findByRole(Boolean role);
     boolean existsByEmail(String email);
     boolean existsByPhone(String phone);
-    // ... các phương thức khác nếu có
 
     @Query("SELECT u.userId FROM User u WHERE u.userId LIKE 'CUS%' ORDER BY u.userId DESC LIMIT 1")
     Optional<String> findTopByUserIdOrderByUserIdDesc();

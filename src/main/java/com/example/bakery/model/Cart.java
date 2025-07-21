@@ -18,8 +18,6 @@ import java.util.Set;
 @Table(name = "carts")
 @Getter
 @Setter
-// !!! QUAN TRỌNG: Loại bỏ @ToString hoặc loại trừ các trường liên quan đến quan hệ hai chiều.
-// Nếu không, toString() cũng có thể gây StackOverflowError.
 @ToString(exclude = {"cartItems"}) // Loại trừ cartItems khỏi toString()
 @EntityListeners(AuditingEntityListener.class) // Đảm bảo lớp này được lắng nghe cho Auditing
 public class Cart {
@@ -35,11 +33,11 @@ public class Cart {
     private Set<CartItem> cartItems = new HashSet<>();
 
     @CreatedDate
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @LastModifiedDate
-    @Column(nullable = false)
+    @Column(name = "last_modified_at", nullable = false)
     private LocalDateTime lastModifiedAt;
 
     public void addCartItem(CartItem item) {

@@ -13,9 +13,13 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.validation.BindingResult;
+
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -35,10 +39,22 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
+    public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest, BindingResult bindingResult) {
         try {
+            if (bindingResult.hasErrors()) {
+                // Thu thập tất cả các thông báo lỗi và ghép lại
+                String errorMessage = bindingResult.getFieldErrors().stream()
+                        .map(FieldError::getDefaultMessage)
+                        .collect(Collectors.joining("; ")); // Ghép các lỗi bằng dấu chấm phẩy
+                return ResponseEntity.badRequest().body(new AuthResponse(null, null, null, null, null, null, null, errorMessage));
+            }
+
             if (userService.existsByEmail(registerRequest.getEmail())) {
                 return ResponseEntity.badRequest().body(new AuthResponse(null, null, null, null, null, null, null, "Email đã được sử dụng."));
+            }
+
+            if (userService.existsByPhone(registerRequest.getPhone())) {
+                return ResponseEntity.badRequest().body(new AuthResponse(null, null, null, null, null, null, null, "Số điện thoại đã được sử dụng."));
             }
 
             User newUser = new User();

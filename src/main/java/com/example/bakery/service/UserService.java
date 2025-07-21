@@ -56,6 +56,11 @@ public class UserService {
         return savedUser;
     }
 
+    public boolean existsByPhone(String phone) {
+        return userRepository.existsByPhone(phone);
+    }
+
+
     public boolean existsByEmail(String email) {
         return userRepository.findByEmail(email).isPresent();
     }
