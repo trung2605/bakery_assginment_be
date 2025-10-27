@@ -10,7 +10,6 @@ COPY src ./src
 # Use Maven inside the image to download and build (fail-never để vẫn tiếp tục dù có lỗi như encoding)
 RUN mvn -B -DskipTests package --fail-never
 
----
 ### Runtime stage
 FROM eclipse-temurin:21-jre AS runtime
 WORKDIR /app
