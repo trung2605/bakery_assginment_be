@@ -53,7 +53,12 @@ public class SecurityConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**") // Áp dụng cho tất cả các đường dẫn API
-                        .allowedOrigins("http://localhost:3000", "https://bakery-assginment-fe.vercel.app/") // Thay bằng origin frontend của bạn
+                        .allowedOrigins(
+                                "http://localhost:3000",
+                                "https://bakery-assginment-fe.vercel.app",
+                                "https://bakery-assginment-fe.vercel.app/",
+                                "https://bakery-assginment-fe-git-develop-le-tri-trungs-projects.vercel.app/"
+                                ) // Thay bằng origin frontend của bạn
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*") // Cho phép tất cả các headers
                         .allowCredentials(true); // Quan trọng nếu bạn gửi cookie (session, CSRF token)
